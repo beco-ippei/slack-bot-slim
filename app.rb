@@ -1,7 +1,7 @@
-require 'slack-ruby-client'
+require 'slack'
 
 Slack.configure do |config|
-    config.token = ENV['token']
+  config.token = ENV['token']
 end
 
 cmd = ARGV[0]
@@ -12,7 +12,7 @@ if cmd == 'auth_test'
 end
 
 
-client = Slack::RealTime::Client.new
+client = Slack.realtime
 
 client.on :hello do
   puts 'Successfully connected.'
@@ -22,11 +22,26 @@ client.on :message do |data|
   puts "receive message: #{data['text']}"
   case data['text']
   when /bot hi/ then
-    client.message channel: data['channel'], text: "Hi <@#{data['user']}>!"
+    reply data, "Hi <@#{data['user']}>!"
   when /^bot/ then
-    client.message channel: data['channel'], text: "Sorry <@#{data['user']}>, what?"
+    reply data, "Sorry <@#{data['user']}>, what?"
   end
 end
 
-client.start!
+def api
+  @@api ||= Slack::API.new
+  @@api
+end
+
+def reply(data, msg)
+  params = {
+    channel: data['channel'],
+    username: 'rubot',      #TODO
+    icon_emoji: ':japanese_goblin:',
+    text: msg,
+  }
+  api.chat_postMessage params
+end
+
+client.start
 
