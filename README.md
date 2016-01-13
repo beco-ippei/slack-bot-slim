@@ -1,4 +1,4 @@
-# slack-bot-ruby
+# slack-bot-slim
 simple slack-bot written in ruby (for DYI)
 
 # TODO
