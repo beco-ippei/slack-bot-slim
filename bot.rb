@@ -1,4 +1,4 @@
-require './lib/slack_bot'
+require './lib/slack_bot_slim'
 
 SlackBot.token = ENV['token']
 bot = SlackBot.generate
