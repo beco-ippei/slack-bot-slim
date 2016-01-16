@@ -2,12 +2,11 @@ require './lib/slack_bot_slim'
 
 SlackBot.token = ENV['token']
 #TODO: fetch name, icon by api.
-SlackBot.name = ENV['name']
+SlackBot.icon = ENV['icon']
 bot = SlackBot.generate
 
 bot.hear :ambient, /hello/i do |msg|
-  p msg
-  msg.reply 'great !'
+  msg.reply "hello. I'm #{bot.user}."
 end
 
 bot.hear :ambient, /bot hi/ do |msg|

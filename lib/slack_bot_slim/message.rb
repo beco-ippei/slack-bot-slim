@@ -3,28 +3,33 @@ module SlackBotSlim
   #{"type"=>"message", "channel"=>"C03AG3JLV", "user"=>"U037TD3QY", "text"=>"<@U0J8MEWLR>: hello", "ts"=>"1452790318.000135", "team"=>"XXXXXXXXX", :message=>#<MatchData "hello">}
   class Message
     @@bot = nil
-    attr_accessor :type, :channel, :user, :text,
-      :ts, :team, :match
+    attr_reader :type, :text, :match,
+      :user, :user_id, :channel, :channel_id,
+      :ts, :time, :team, :team_id
 
     def initialize(data)
       @type = data['type']
-      @channel = data['channel']
-      @user = data['user']
       @text = data['text']
-      @ts = data['ts']
-      @team = data['team']
-      @match = data[:match]
+
+      self.channel = data['channel']
+      self.user = data['user']
+      self.time = data['ts'].to_f
+      self.team = data['team']
     end
 
     def self.bot=(bot)
       @@bot = bot
     end
 
+    def matched=(matched)
+      @match = matched
+    end
+
     def reply(message)
       params = {
-        channel: self.channel,
-        username: bot.name,      #TODO
-        icon_emoji: ':japanese_goblin:',
+        channel: @channel_id,
+        username: bot.user,
+        icon_emoji: bot.icon,
         text: message,
       }
       bot.api.chat_postMessage params
@@ -34,6 +39,28 @@ module SlackBotSlim
 
     def bot
       @@bot
+    end
+
+    def channel=(channel_id)
+      #TODO channel class
+      @channel_id = channel_id
+      #@channel = bot.api... # get channel name
+    end
+
+    def user=(user_id)
+      #TODO user class
+      @user_id = user_id
+      #TODO get user name
+    end
+
+    def team=(team_id)
+      #TODO team class or not ?
+      @team_id = team_id
+    end
+
+    def time=(epoch)
+      @ts = epoch
+      @time = Time.at epoch
     end
   end
 end

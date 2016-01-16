@@ -2,24 +2,24 @@ require 'slack'
 
 module SlackBotSlim
   class Bot
-    attr_reader :api
-    @@bot = nil
+    attr_reader :api, :user, :user_id
 
     def self.token=(token)
       #TODO
       @@token = token
     end
 
-    def self.name=(name)
-      #TODO
-      @@name = name
+    def self.icon=(icon_emoji)
+      @@icon = icon_emoji
+    end
+
+    def icon
+      @@icon
     end
 
     def self.generate
-      unless @@bot
-        @@bot = self.new(@@token)
-        SlackBotSlim::Message.bot = @@bot
-      end
+      @@bot ||= self.new(@@token)
+      SlackBotSlim::Message.bot = @@bot
       @@bot
     end
 
@@ -28,7 +28,20 @@ module SlackBotSlim
         config.token = token
       end
 
-      p Slack.auth_test
+      res = Slack.auth_test
+      if res['ok']
+        puts "auth test: ok, #{res}"
+        @url = res['url']
+        @team = res['team']
+        @team_id = res['team_id']
+        @user = res['user']
+        @user_id = res['user_id']
+      else
+        raise Exception.new(
+          'failed auth test',
+          res['error']
+        )
+      end
       @client = Slack.realtime
 
       @reactions = {
@@ -36,7 +49,7 @@ module SlackBotSlim
         mention: [],
       }
 
-      @api ||= Slack::API.new
+      @api = Slack::API.new
     end
 
     def start_waiting
@@ -45,26 +58,20 @@ module SlackBotSlim
       end
 
       @client.on :message do |data|
-        msg = SlackBotSlim::Message.new data
-        puts "receive message: #{msg.text}"
-
-        #TODO check type and call typed method
-
-        @reactions[:ambient].each do |(_, pattern, prc)|
-          if matched = pattern.match(msg.text)
-            msg.match = matched
-            prc.call msg
-          end
-        end
+        handle_message data
       end
-      #TODO: catch interrupt
+
+      Signal.trap("INT")  { self.stop }
+      Signal.trap("TERM") { self.stop }
 
       @client.start
-    rescue => ex
-      p ex
     end
 
-    #def hear(types, patterns, priority = 0)
+    def stop
+      puts "stopped"
+      EventMachine.stop
+    end
+
     def hear(types, patterns, priority = 0, &block)
       types = [types] unless types.is_a? Array
       types.each do |type|
@@ -81,11 +88,26 @@ module SlackBotSlim
       nil
     end
 
-    def name
-      @@name
-    end
-
     private
+
+    def handle_message(data)
+      msg = SlackBotSlim::Message.new data
+      return unless msg.user_id
+
+      puts "receive message: #{msg.text}"
+
+      #TODO check type and call typed method
+
+      @reactions[:ambient].each do |(_, ptn, prc)|
+        if matched = ptn.match(msg.text)
+          msg.matched = matched
+          prc.call msg
+        end
+      end
+    rescue => ex
+      puts "Exception in handle message : #{ex.message}"
+      puts ex.backtrace.join("\n\t")
+    end
 
     def valid_type?(type)
       [:ambient, :mention].include? type
