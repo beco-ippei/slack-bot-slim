@@ -42,15 +42,17 @@ module SlackBotSlim
     end
 
     def channel=(channel_id)
-      #TODO channel class
+      #TODO channel class ?
       @channel_id = channel_id
-      #@channel = bot.api... # get channel name
+      @channel = bot.api.channel(channel_id)['name']
     end
 
     def user=(user_id)
-      #TODO user class
-      @user_id = user_id
-      #TODO get user name
+      if user_id
+        #TODO user class
+        @user_id = user_id
+        @user = bot.api.user(user_id)['name']
+      end
     end
 
     def team=(team_id)

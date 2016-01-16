@@ -40,7 +40,7 @@ module SlackBotSlim
         mention: [],
       }
 
-      @api = Slack::API.new
+      @api = SlackBotSlim::Api.new
     end
 
     def auth

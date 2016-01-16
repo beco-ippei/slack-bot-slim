@@ -6,7 +6,8 @@ SlackBot.icon = ENV['icon']
 bot = SlackBot.generate
 
 bot.hear :ambient, /hello/i do |msg|
-  msg.reply "hello. I'm #{bot.user}."
+  msg.reply "hello. I'm #{bot.user}." +
+    " you are #{msg.user} in #{msg.channel}"
 end
 
 bot.hear :ambient, /bot hi/ do |msg|
