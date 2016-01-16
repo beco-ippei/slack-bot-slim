@@ -28,20 +28,11 @@ module SlackBotSlim
         config.token = token
       end
 
-      res = Slack.auth_test
-      if res['ok']
-        puts "auth test: ok, #{res}"
-        @url = res['url']
-        @team = res['team']
-        @team_id = res['team_id']
-        @user = res['user']
-        @user_id = res['user_id']
-      else
-        raise Exception.new(
-          'failed auth test',
-          res['error']
-        )
+      ok, error = auth
+      unless ok
+        raise Exception.new "auth failed : '#{error}'"
       end
+
       @client = Slack.realtime
 
       @reactions = {
@@ -50,6 +41,21 @@ module SlackBotSlim
       }
 
       @api = Slack::API.new
+    end
+
+    def auth
+      res = Slack.auth_test
+
+      puts "auth test: " +
+        res.map{|k,v| "#{k}:'#{v}'" }.join(', ')
+
+      @url = res['url']
+      @team = res['team']
+      @team_id = res['team_id']
+      @user = res['user']
+      @user_id = res['user_id']
+
+      [res['ok'], res['error']]
     end
 
     def start_waiting
