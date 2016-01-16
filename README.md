@@ -13,3 +13,5 @@ simple slack-bot written in ruby (for DYI)
   * message-info (like pattern matched blocks)
 * ignore channel or user messages by config
   * white or black listing
+  * by bot
+  * by response (hear)
