@@ -1,6 +1,4 @@
 module SlackBotSlim
-  #TODO: sample
-  #{"type"=>"message", "channel"=>"C03AG3JLV", "user"=>"U037TD3QY", "text"=>"<@U0J8MEWLR>: hello", "ts"=>"1452790318.000135", "team"=>"XXXXXXXXX", :message=>#<MatchData "hello">}
   class Message
     @@bot = nil
     attr_reader :type, :text, :match,
@@ -17,47 +15,39 @@ module SlackBotSlim
       self.team = data['team']
     end
 
-    def self.bot=(bot)
-      @@bot = bot
-    end
-
     def matched=(matched)
       @match = matched
     end
 
     def reply(message)
-      params = {
+      bot.send_message(
         channel: @channel_id,
-        username: bot.user,
-        icon_emoji: bot.icon,
         text: message,
-      }
-      bot.api.chat_postMessage params
+      )
     end
 
     private
 
     def bot
+      @@bot ||= SlackBotSlim::Bot.bot
       @@bot
     end
 
     def channel=(channel_id)
-      #TODO channel class ?
       @channel_id = channel_id
       @channel = bot.api.channel(channel_id)['name']
     end
 
     def user=(user_id)
       if user_id
-        #TODO user class
         @user_id = user_id
         @user = bot.api.user(user_id)['name']
       end
     end
 
     def team=(team_id)
-      #TODO team class or not ?
       @team_id = team_id
+      #TODO: @team
     end
 
     def time=(epoch)

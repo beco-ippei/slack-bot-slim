@@ -2,24 +2,15 @@ require 'slack'
 
 module SlackBotSlim
   class Bot
-    attr_reader :api, :user, :user_id
+    attr_reader :api, :user, :user_id, :icon
 
     def self.token=(token)
       #TODO
       @@token = token
     end
 
-    def self.icon=(icon_emoji)
-      @@icon = icon_emoji
-    end
-
-    def icon
-      @@icon
-    end
-
-    def self.generate
+    def self.bot
       @@bot ||= self.new(@@token)
-      SlackBotSlim::Message.bot = @@bot
       @@bot
     end
 
@@ -32,6 +23,8 @@ module SlackBotSlim
       unless ok
         raise Exception.new "auth failed : '#{error}'"
       end
+      @api = SlackBotSlim::Api.new
+      fetch_bot_user_info
 
       @client = Slack.realtime
 
@@ -39,26 +32,9 @@ module SlackBotSlim
         ambient: [],
         mention: [],
       }
-
-      @api = SlackBotSlim::Api.new
     end
 
-    def auth
-      res = Slack.auth_test
-
-      puts "auth test: " +
-        res.map{|k,v| "#{k}:'#{v}'" }.join(', ')
-
-      @url = res['url']
-      @team = res['team']
-      @team_id = res['team_id']
-      @user = res['user']
-      @user_id = res['user_id']
-
-      [res['ok'], res['error']]
-    end
-
-    def start_waiting
+    def start
       @client.on :hello do
         puts 'Successfully connected.'
       end
@@ -78,7 +54,7 @@ module SlackBotSlim
       EventMachine.stop
     end
 
-    def hear(types, patterns, priority = 0, &block)
+    def hear(types, pattern, priority = 0, &block)
       types = [types] unless types.is_a? Array
       types.each do |type|
         unless valid_type? type
@@ -87,14 +63,43 @@ module SlackBotSlim
 
         @reactions[type] << [
           priority,
-          patterns,     #TODO: multiple ?
+          pattern,
           block,
         ]
       end
       nil
     end
 
+    def send_message(params)
+      _params = {
+        username: user,
+        icon_url: icon,
+      }.merge(params)
+      api.chat_postMessage _params
+    end
+
     private
+
+    def auth
+      res = Slack.auth_test
+
+      puts "auth test: " +
+        res.map{|k,v| "#{k}:'#{v}'" }.join(', ')
+
+      @url = res['url']
+      @team = res['team']
+      @team_id = res['team_id']
+      @user = res['user']
+      @user_id = res['user_id']
+
+      [res['ok'], res['error']]
+    end
+
+    def fetch_bot_user_info
+      puts 'fetch bot user info'
+      info = @api.users_info user: @user_id
+      @icon = info['user']['profile']['image_48']
+    end
 
     def handle_message(data)
       msg = SlackBotSlim::Message.new data
@@ -113,6 +118,10 @@ module SlackBotSlim
     rescue => ex
       puts "Exception in handle message : #{ex.message}"
       puts ex.backtrace.join("\n\t")
+      send_message(
+        channel: msg.channel_id,
+        text: "error : '#{ex.message}'",
+      )
     end
 
     def valid_type?(type)
