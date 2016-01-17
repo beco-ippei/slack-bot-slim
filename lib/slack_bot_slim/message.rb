@@ -7,8 +7,8 @@ module SlackBotSlim
 
     def initialize(data)
       @type = data['type']
-      @text = data['text']
 
+      self.text = data['text']
       self.channel = data['channel']
       self.user = data['user']
       self.time = data['ts'].to_f
@@ -33,9 +33,30 @@ module SlackBotSlim
       @@bot
     end
 
+    def text=(text)
+      @original_text = text
+
+      @text = text
+    end
+
+    def parse_text(text)
+      text.strip!
+      if m = /^[\s　]*<@([^>]+)>[:\s](.*)$/.match(text)
+        dm = m[1]
+        text = m[2].strip
+      end
+
+      {
+        dm: dm,
+        text: text,
+      }
+    end
+
     def channel=(channel_id)
-      @channel_id = channel_id
-      @channel = bot.api.channel(channel_id)['name']
+      if channel_id
+        @channel_id = channel_id
+        @channel = bot.api.channel(channel_id)['name']
+      end
     end
 
     def user=(user_id)
