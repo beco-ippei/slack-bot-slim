@@ -33,6 +33,3 @@ PLATFORMS
 DEPENDENCIES
   pry
   slack-api
-
-BUNDLED WITH
-   1.11.2
