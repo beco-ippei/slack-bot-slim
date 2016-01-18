@@ -26,6 +26,14 @@ module SlackBotSlim
       )
     end
 
+    def dm?
+      @dm && @dm == bot.user_id
+    end
+
+    def mentioned?
+      @mentions && @mentions.include?(bot.user_id)
+    end
+
     private
 
     def bot
@@ -36,7 +44,10 @@ module SlackBotSlim
     def text=(text)
       @original_text = text
 
-      @text = text
+      data = parse_text text
+      @dm = data[:dm]
+      @mentions = data[:mentions]
+      @text = data[:text]
     end
 
     def parse_text(text)
@@ -46,8 +57,11 @@ module SlackBotSlim
         text = m[2].strip
       end
 
+      mentions = text.scan(/<@([^>]+)>/).map(&:first)
+
       {
         dm: dm,
+        mentions: mentions,
         text: text,
       }
     end
