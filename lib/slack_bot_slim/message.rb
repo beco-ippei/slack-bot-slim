@@ -46,8 +46,11 @@ module SlackBotSlim
         text = m[2].strip
       end
 
+      mentions = text.scan(/<@([^>]+)>/).map(&:first)
+
       {
         dm: dm,
+        mentions: mentions,
         text: text,
       }
     end
