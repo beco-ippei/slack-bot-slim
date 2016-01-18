@@ -18,5 +18,10 @@ bot.hear :mention, /^bot/ do |msg|
   msg.reply "Sorry <@#{msg.user}>, what?"
 end
 
+bot.hear :dm, /shutdown/ do |msg|
+  msg.reply "ok. I'm shutting down ....\nBye!"
+  bot.stop
+end
+
 bot.start
 

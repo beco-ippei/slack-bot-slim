@@ -30,6 +30,7 @@ module SlackBotSlim
 
       @reactions = {
         ambient: [],
+        dm: [],
         mention: [],
       }
     end
@@ -109,6 +110,13 @@ module SlackBotSlim
 
       #TODO check type and call typed method
 
+      @reactions[:dm].each do |(_, ptn, prc)|
+        if matched = ptn.match(msg.text)
+          msg.matched = matched
+          prc.call msg
+        end
+      end
+
       @reactions[:ambient].each do |(_, ptn, prc)|
         if matched = ptn.match(msg.text)
           msg.matched = matched
@@ -125,7 +133,7 @@ module SlackBotSlim
     end
 
     def valid_type?(type)
-      [:ambient, :mention].include? type
+      [:ambient, :dm, :mention].include? type
     end
   end
 end
