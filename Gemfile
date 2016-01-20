@@ -6,4 +6,5 @@ gem 'slack-api'
 #gem 'faye-websocket'
 
 gem 'pry'
+gem 'pry-byebug'
 
