@@ -1,3 +1,4 @@
+require 'pry'
 module SlackBotSlim
   class Message
     @@bot = nil
@@ -69,7 +70,8 @@ module SlackBotSlim
     def channel=(channel_id)
       if channel_id
         @channel_id = channel_id
-        @channel = bot.api.channel(channel_id)['name']
+        _channel = bot.api.channel(channel_id)
+        @channel = _channel['name'] if _channel
       end
     end
 

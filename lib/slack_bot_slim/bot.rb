@@ -103,6 +103,7 @@ module SlackBotSlim
     end
 
     def handle_message(data)
+      p :handle_message, data
       msg = SlackBotSlim::Message.new data
       return unless msg.user_id
 
@@ -126,10 +127,10 @@ module SlackBotSlim
     rescue => ex
       puts "Exception in handle message : #{ex.message}"
       puts ex.backtrace.join("\n\t")
-      send_message(
-        channel: msg.channel_id,
-        text: "error : '#{ex.message}'",
-      )
+      #send_message(
+      #  channel: data['channel'],
+      #  text: "error : '#{ex.message}'",
+      #)
     end
 
     def valid_type?(type)
