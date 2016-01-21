@@ -9,9 +9,9 @@ module SlackBotSlim
       @@token = token
     end
 
-    def self.bot
-      @@bot ||= self.new(@@token)
-      @@bot
+    def self.instance
+      @@instance ||= self.new @@token
+      @@instance
     end
 
     def initialize(token)
@@ -26,8 +26,7 @@ module SlackBotSlim
       @api = SlackBotSlim::Api.new
       fetch_bot_user_info
 
-      @client = Slack.realtime
-
+      #@client = Slack.realtime
       @reactions = {
         ambient: [],
         dm: [],
@@ -36,23 +35,26 @@ module SlackBotSlim
     end
 
     def start
-      @client.on :hello do
-        puts 'Successfully connected.'
-      end
+      @receiver = @api.receiver
+      @receiver.start
+      #@client.on :hello do
+      #  puts 'Successfully connected.'
+      #end
 
-      @client.on :message do |data|
-        handle_message data
-      end
+      #@client.on :message do |data|
+      #  handle_message data
+      #end
 
-      Signal.trap("INT")  { self.stop }
-      Signal.trap("TERM") { self.stop }
+      #Signal.trap("INT")  { self.stop }
+      #Signal.trap("TERM") { self.stop }
 
-      @client.start
+      #@client.start
     end
 
     def stop
       puts "stopped"
-      EventMachine.stop
+      @receiver.stop
+      #EventMachine.stop
     end
 
     def hear(types, pattern, priority = 0, &block)
@@ -127,7 +129,7 @@ module SlackBotSlim
       puts "Exception in handle message : #{ex.message}"
       puts ex.backtrace.join("\n\t")
       send_message(
-        channel: msg.channel_id,
+        channel: data['channel'],
         text: "error : '#{ex.message}'",
       )
     end

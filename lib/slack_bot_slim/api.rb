@@ -2,12 +2,32 @@ module SlackBotSlim
   class Api
     attr_reader :users, :channels
 
+    def self.instance
+      @@instance ||= self.new
+      @@instance
+    end
+
     def initialize
       @api = Slack::API.new
+      @users = {}
+      @channels = {}
 
-      puts 'fetch initial lists'
-      fetch_users
-      fetch_channels
+      #puts 'fetch initial lists'
+      #fetch_users
+      #fetch_channels
+    end
+
+    def receiver
+      res = @api.rtm_start
+      unless res['ok']
+        raise 'rtm connection failed'
+      end
+
+      merge_channels res['channels']
+      merge_users res['users']
+
+      bot = SlackBot.instance
+      SlackBotSlim::Receiver.new res['url'], bot
     end
 
     def user(id)
@@ -23,6 +43,7 @@ module SlackBotSlim
 
     def channel(id)
       unless @channels.has_key? id
+        #TODO: should fetch only one ...
         fetch_channels
         unless @channels.has_key? id
           @channels[id] = nil   # never fetch again
@@ -39,10 +60,12 @@ module SlackBotSlim
       unless res['ok']
         raise "Api fetch error : '#{res['error']}'"
       end
+      merge_users res['members']
+    end
 
-      @users = res['members'].inject({}) do |h, e|
-        h[e['id']] = e
-        h
+    def merge_users(users)
+      users.each do |e|
+        @users[e['id']] = e
       end
     end
 
@@ -51,10 +74,12 @@ module SlackBotSlim
       unless res['ok']
         raise "Api fetch error : '#{res['error']}'"
       end
+      merge_channels res['channels']
+    end
 
-      @channels = res['channels'].inject({}) do |h, e|
-        h[e['id']] = e
-        h
+    def merge_channels(channels)
+      channels.each do |e|
+        @channels[e['id']] = e
       end
     end
 
@@ -72,3 +97,10 @@ module SlackBotSlim
   end
 end
 
+module Slack
+  class API
+    def rtm_start
+      post("rtm.start")
+    end
+  end
+end

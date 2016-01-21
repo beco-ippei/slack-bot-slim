@@ -2,6 +2,23 @@ GEM
   remote: https://rubygems.org/
   specs:
     byebug (8.2.1)
+    celluloid (0.17.3)
+      celluloid-essentials
+      celluloid-extras
+      celluloid-fsm
+      celluloid-pool
+      celluloid-supervision
+      timers (>= 4.1.1)
+    celluloid-essentials (0.20.5)
+      timers (>= 4.1.1)
+    celluloid-extras (0.20.5)
+      timers (>= 4.1.1)
+    celluloid-fsm (0.20.5)
+      timers (>= 4.1.1)
+    celluloid-pool (0.20.5)
+      timers (>= 4.1.1)
+    celluloid-supervision (0.20.5)
+      timers (>= 4.1.1)
     coderay (1.1.0)
     eventmachine (1.0.8)
     faraday (0.9.2)
@@ -11,6 +28,7 @@ GEM
     faye-websocket (0.9.2)
       eventmachine (>= 0.12.0)
       websocket-driver (>= 0.5.1)
+    hitimes (1.2.3)
     method_source (0.8.2)
     multi_json (1.11.2)
     multipart-post (2.0.0)
@@ -27,6 +45,8 @@ GEM
       faye-websocket (~> 0.9.2)
       multi_json (~> 1.0, >= 1.0.3)
     slop (3.6.0)
+    timers (4.1.1)
+      hitimes
     websocket-driver (0.6.3)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.2)
@@ -35,6 +55,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  celluloid
   pry
   pry-byebug
   slack-api

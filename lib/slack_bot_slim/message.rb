@@ -37,7 +37,7 @@ module SlackBotSlim
     private
 
     def bot
-      @@bot ||= SlackBotSlim::Bot.bot
+      @@bot ||= SlackBotSlim::Bot.instance
       @@bot
     end
 
