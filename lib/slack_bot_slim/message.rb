@@ -37,7 +37,7 @@ module SlackBotSlim
     private
 
     def bot
-      @@bot ||= SlackBotSlim::Bot.bot
+      @@bot ||= SlackBotSlim::Bot.instance
       @@bot
     end
 
@@ -69,14 +69,16 @@ module SlackBotSlim
     def channel=(channel_id)
       if channel_id
         @channel_id = channel_id
-        @channel = bot.api.channel(channel_id)['name']
+        channel = bot.api.channel(channel_id)
+        @channel = channel['name'] if channel
       end
     end
 
     def user=(user_id)
       if user_id
         @user_id = user_id
-        @user = bot.api.user(user_id)['name']
+        user = bot.api.user(user_id)
+        @user = user['name'] if user
       end
     end
 

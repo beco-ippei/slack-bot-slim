@@ -1,32 +1,25 @@
-require 'slack'
-
 module SlackBotSlim
   class Bot
     attr_reader :api, :user, :user_id, :icon
 
     def self.token=(token)
-      #TODO
-      @@token = token
-    end
-
-    def self.bot
-      @@bot ||= self.new(@@token)
-      @@bot
-    end
-
-    def initialize(token)
       Slack.configure do |config|
         config.token = token
       end
+    end
 
+    def self.instance
+      @@bot ||= self.new
+      @@bot
+    end
+
+    def initialize
       ok, error = auth
       unless ok
         raise Exception.new "auth failed : '#{error}'"
       end
       @api = SlackBotSlim::Api.new
-      fetch_bot_user_info
-
-      @client = Slack.realtime
+      fetch_bot_user_info     #TODO
 
       @reactions = {
         ambient: [],
@@ -36,23 +29,16 @@ module SlackBotSlim
     end
 
     def start
-      @client.on :hello do
-        puts 'Successfully connected.'
+      @receiver = @api.receiver
+      @receiver.start do |data|
+        handle_message data        
       end
-
-      @client.on :message do |data|
-        handle_message data
-      end
-
-      Signal.trap("INT")  { self.stop }
-      Signal.trap("TERM") { self.stop }
-
-      @client.start
     end
 
     def stop
-      puts "stopped"
-      EventMachine.stop
+      #puts "stopped"
+      #EventMachine.stop
+      @receiver.stop
     end
 
     def hear(types, pattern, priority = 0, &block)
@@ -127,7 +113,7 @@ module SlackBotSlim
       puts "Exception in handle message : #{ex.message}"
       puts ex.backtrace.join("\n\t")
       send_message(
-        channel: msg.channel_id,
+        channel: data['channel'],
         text: "error : '#{ex.message}'",
       )
     end
