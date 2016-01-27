@@ -2,6 +2,11 @@ module SlackBotSlim
   class Api
     attr_reader :users, :channels
 
+    def self.instance
+      @@instance ||= self.new
+      @@instance
+    end
+
     def initialize
       @api = Slack::API.new
       @users = {}

@@ -31,13 +31,11 @@ module SlackBotSlim
     def start
       @receiver = @api.receiver
       @receiver.start do |data|
-        handle_message data        
+        handle_message data
       end
     end
 
     def stop
-      #puts "stopped"
-      #EventMachine.stop
       @receiver.stop
     end
 

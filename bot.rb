@@ -1,8 +1,6 @@
 require './lib/slack_bot_slim'
 
 SlackBot.token = ENV['token']
-#TODO: fetch name, icon by api.
-#SlackBot.icon = ENV['icon']
 bot = SlackBot.instance
 
 bot.hear :ambient, /hello/i do |msg|
