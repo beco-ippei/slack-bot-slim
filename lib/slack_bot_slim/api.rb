@@ -1,6 +1,6 @@
 module SlackBotSlim
   class Api
-    attr_reader :users, :channels
+    attr_reader :users, :channels, :bot_info
 
     def self.instance
       @@instance ||= self.new
@@ -13,19 +13,30 @@ module SlackBotSlim
       @channels = {}
 
       #TODO
-      def @api.rtm_start
-        post("rtm.start")
-      end
-    end
+      #def @api.rtm_start
+      #  post("rtm.start")
+      #end
 
-    def receiver
-      res = @api.rtm_start
+      res = @api.send :post, "rtm.start"
       unless res['ok']
         raise 'rtm connection failed'
       end
 
       merge_channels res['channels']
       merge_users res['users']
+      @bot_info = res['users'].detect do |e|
+        e['id'] == res['self']['id']
+      end
+    end
+
+    def receiver
+      #res = @api.rtm_start
+      #unless res['ok']
+      #  raise 'rtm connection failed'
+      #end
+
+      #merge_channels res['channels']
+      #merge_users res['users']
 
       bot = SlackBot.instance
       SlackBotSlim::Receiver.new res['url'], bot
