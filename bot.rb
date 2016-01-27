@@ -3,23 +3,10 @@ require './lib/slack_bot_slim'
 SlackBot.token = ENV['token']
 bot = SlackBot.instance
 
-bot.hear :ambient, /hello/i do |msg|
-  msg.reply "hello. I'm #{bot.user}." +
-    " you are #{msg.user} in #{msg.channel}"
-end
+$LOAD_PATH.unshift File.expand_path('../app', __FILE__)
 
-bot.hear :ambient, /bot hi/ do |msg|
-  msg.reply "Hi <@#{msg.user}>!"
-end
+require 'application'
 
-bot.hear :mention, /^bot/ do |msg|
-  msg.reply "Sorry <@#{msg.user}>, what?"
-end
-
-bot.hear :dm, /shutdown/ do |msg|
-  msg.reply "ok. I'm shutting down ....\nBye!"
-  bot.stop
-end
-
+# start
 bot.start
 
