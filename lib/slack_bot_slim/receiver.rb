@@ -9,15 +9,21 @@ module SlackBotSlim
 
     def start(&block)
       ws = WebSocket::Client::Simple.connect @url
+      unless ws
+        #TODO
+      end
 
       ws.on :message do |event|
         data = JSON.parse(event.data)
-        type = data["type"].to_sym
-        case type
+        case type = data["type"].to_sym
         when :message
           yield data
+        when :user_typing, :presence_change
+          # do nothing
+        when :reconnect_url
+          @reconnect_url = data['url']
         else
-          puts "--- #{type} ---", data
+          puts "--- :#{type} ---", data
         end
       end
 
@@ -27,7 +33,12 @@ module SlackBotSlim
 
       ws.on :close do |event|
         puts 'connection closed'
-        self.stop
+        if @reconnect_url
+          puts 'reconnect ...'
+          ws = WebSocket::Client::Simple.connect @reconnect_url
+        else
+          self.stop
+        end
       end
 
       Signal.trap("INT")  { self.stop }
