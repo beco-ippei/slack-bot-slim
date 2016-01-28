@@ -11,7 +11,8 @@ module SlackBotSlim
       ws = WebSocket::Client::Simple.connect @url
 
       ws.on :message do |event|
-        type, data = handle event
+        data = JSON.parse(event.data)
+        type = data["type"].to_sym
         case type
         when :message
           yield data
@@ -47,21 +48,6 @@ module SlackBotSlim
     def stop
       puts "stopped"
       exit
-    end
-
-    private
-
-    def handle(event)
-      data = JSON.parse(event.data)
-      type = data["type"].to_sym
-      data = case type
-             when :message
-               puts 'message ...'
-               JSON.parse(event.data)
-             else
-               puts "--- #{type} ---", data
-             end
-      [type, data]
     end
   end
 end
