@@ -2,9 +2,10 @@
 source "https://rubygems.org"
 
 gem 'slack-api'
-#gem 'slack-ruby-client'
-#gem 'faye-websocket'
+gem 'websocket-client-simple'
 
-gem 'pry'
-gem 'pry-byebug'
+group :development do
+  gem 'pry'
+  gem 'pry-byebug'
+end
 
