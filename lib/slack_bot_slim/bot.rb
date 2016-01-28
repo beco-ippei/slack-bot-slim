@@ -19,7 +19,6 @@ module SlackBotSlim
         raise "auth failed : '#{error}'"
       end
       @api = SlackBotSlim::Api.new
-      #fetch_bot_user_info     #TODO
       @icon = @api.bot_info['profile']['image_48']
 
       @reactions = {
@@ -69,9 +68,7 @@ module SlackBotSlim
     def auth
       res = Slack.auth_test
 
-      puts "auth test: #{res}" +
-      #puts "auth test: " +
-      #  res.map{|k,v| "#{k}:'#{v}'" }.join(', ')
+      puts "auth test: #{res}"
 
       @url = res['url']
       @team = res['team']
@@ -81,12 +78,6 @@ module SlackBotSlim
 
       [res['ok'], res['error']]
     end
-
-    #def fetch_bot_user_info
-    #  puts 'fetch bot user info'
-    #  info = @api.users_info user: @user_id
-    #  @icon = info['user']['profile']['image_48']
-    #end
 
     def handle_message(data)
       msg = SlackBotSlim::Message.new data

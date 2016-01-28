@@ -27,6 +27,7 @@ module SlackBotSlim
       @bot_info = res['users'].detect do |e|
         e['id'] == res['self']['id']
       end
+      @rtm_url = res['url']
     end
 
     def receiver
@@ -39,7 +40,7 @@ module SlackBotSlim
       #merge_users res['users']
 
       bot = SlackBot.instance
-      SlackBotSlim::Receiver.new res['url'], bot
+      SlackBotSlim::Receiver.new @rtm_url, bot
     end
 
     def user(id)
@@ -100,7 +101,7 @@ module SlackBotSlim
       else
         raise NameError.new(
           "undefined method `%s' for class `%s'" %
-            method, self.class,
+            [method, self.class],
           method
         )
       end
