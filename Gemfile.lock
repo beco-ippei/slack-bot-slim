@@ -3,6 +3,9 @@ GEM
   specs:
     byebug (8.2.1)
     coderay (1.1.0)
+    em-websocket-client (0.1.2)
+      eventmachine
+      websocket
     eventmachine (1.0.9.1)
     faraday (0.9.2)
       multipart-post (>= 1.2, < 3)
@@ -27,6 +30,7 @@ GEM
       faye-websocket (~> 0.9.2)
       multi_json (~> 1.0, >= 1.0.3)
     slop (3.6.0)
+    websocket (1.2.2)
     websocket-driver (0.6.3)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.2)
@@ -35,7 +39,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  faye-websocket
+  em-websocket-client
   pry
   pry-byebug
   slack-api

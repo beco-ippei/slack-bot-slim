@@ -3,7 +3,8 @@ source "https://rubygems.org"
 
 gem 'slack-api'
 #gem 'websocket-client-simple'
-gem 'faye-websocket'
+#gem 'faye-websocket'
+gem 'em-websocket-client'
 
 group :development do
   gem 'pry'
