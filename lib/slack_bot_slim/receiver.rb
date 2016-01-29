@@ -1,4 +1,5 @@
-require 'websocket-client-simple'
+require 'faye/websocket'
+require 'eventmachine'
 
 module SlackBotSlim
   class Receiver
@@ -8,6 +9,41 @@ module SlackBotSlim
     end
 
     def start(&block)
+      EM.run do
+        ws = Faye::WebSocket::Client.new(@url)
+        p '----------', ws
+
+        ws.on :open do |event|
+          puts 'Successfully connected.'
+        end
+
+        ws.on :message do |event|
+          data = JSON.parse(event.data)
+          case data["type"].to_sym
+          when :message
+            yield JSON.parse(event.data)
+          else
+            #p "---", event
+          end
+          #if !data["type"].nil? && !@callbacks[data["type"].to_sym].nil?
+          #  @callbacks[data["type"].to_sym].each do |c|
+          #    c.call data
+          #  end
+          #end
+        end
+
+        ws.on :close do |event|
+          puts 'connection closed'
+          p event
+          self.stop
+        end
+
+        Signal.trap("INT")  { self.stop }
+        Signal.trap("TERM") { self.stop }
+      end
+    end
+
+    def _start(&block)
       ws = WebSocket::Client::Simple.connect @url
       unless ws
         #TODO
@@ -58,7 +94,8 @@ module SlackBotSlim
 
     def stop
       puts "stopped"
-      exit
+      #exit
+      EM.stop
     end
   end
 end
