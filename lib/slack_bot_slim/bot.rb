@@ -2,6 +2,8 @@ module SlackBotSlim
   class Bot
     attr_reader :api, :user, :user_id, :icon
 
+    VALID_TYPES = [:ambient, :dm, :mention, :all]
+
     def self.token=(token)
       Slack.configure do |config|
         config.token = token
@@ -21,11 +23,7 @@ module SlackBotSlim
       @api = SlackBotSlim::Api.new
       @icon = @api.bot_info['profile']['image_48']
 
-      @reactions = {
-        ambient: [],
-        dm: [],
-        mention: [],
-      }
+      @reactions = {}
     end
 
     def start
@@ -39,19 +37,17 @@ module SlackBotSlim
       @receiver.stop
     end
 
-    def hear(types, pattern, priority = 0, &block)
-      types = [types] unless types.is_a? Array
-      types.each do |type|
-        unless valid_type? type
-          raise "invalid type '#{type}'"
-        end
-
-        @reactions[type] << [
-          priority,
-          pattern,
-          block,
-        ]
+    def hear(type, pattern, priority = 0, &block)
+      unless valid_type? type
+        raise "invalid type '#{type}'"
       end
+
+      @reactions[type] ||= []
+      @reactions[type] << [
+        priority,
+        pattern,
+        block,
+      ]
       nil
     end
 
@@ -87,17 +83,23 @@ module SlackBotSlim
 
       #TODO check type and call typed method
 
-      @reactions[:dm].each do |(_, ptn, prc)|
-        if matched = ptn.match(msg.text)
-          msg.matched = matched
-          prc.call msg
-        end
-      end
+      #TODO handle im ?
+      types = if msg.dm?
+                [:dm, :all]
+              elsif msg.mentioned?
+                [:dm, :mention, :all]
+              else
+                [:ambient, :all]
+              end
 
-      @reactions[:ambient].each do |(_, ptn, prc)|
-        if matched = ptn.match(msg.text)
-          msg.matched = matched
-          prc.call msg
+      types.each do |type|
+        next unless @reactions[type]
+        @reactions[type].each do |(_, ptn, prc)|
+          if matched = ptn.match(msg.text)
+            msg.matched = matched
+            prc.call msg
+            #TODO continue or break loop
+          end
         end
       end
     rescue => ex
@@ -110,7 +112,7 @@ module SlackBotSlim
     end
 
     def valid_type?(type)
-      [:ambient, :dm, :mention].include? type
+      VALID_TYPES.include? type
     end
   end
 end
