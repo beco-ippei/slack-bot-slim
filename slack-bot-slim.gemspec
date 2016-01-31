@@ -10,10 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["beco.ippei@gmail.com"]
 
   spec.summary       = %q{light-weight slack bot rubygem.}
-  spec.description   = <<-DESC
-  A ruby slack-bot. Ligith-weight and simple (or should debug in use).
-  ...
-  DESC
+  spec.description   = %q{}
   spec.homepage      = "https://github.com/beco-ippei/slack-bot-slim"
   spec.license       = 'MIT'
 
