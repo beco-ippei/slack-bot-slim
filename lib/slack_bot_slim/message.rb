@@ -8,6 +8,7 @@ module SlackBotSlim
     def initialize(data)
       @type = data['type']
 
+      #TODO: 各項目がnilになるケースなど
       self.text = data['text']
       self.channel = data['channel']
       self.user = data['user']
@@ -44,10 +45,12 @@ module SlackBotSlim
     def text=(text)
       @original_text = text
 
-      data = parse_text text
-      @dm = data[:dm]
-      @mentions = data[:mentions]
-      @text = data[:text]
+      if text
+        data = parse_text text
+        @dm = data[:dm]
+        @mentions = data[:mentions]
+        @text = data[:text]
+      end
     end
 
     def parse_text(text)

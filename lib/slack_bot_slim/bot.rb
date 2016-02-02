@@ -26,6 +26,7 @@ module SlackBotSlim
       @reactions = {}
     end
 
+    #TODO: sort by priority
     def start
       @receiver = @api.receiver
       @receiver.start do |data|
@@ -77,9 +78,11 @@ module SlackBotSlim
 
     def handle_message(data)
       msg = SlackBotSlim::Message.new data
-      return unless msg.user_id
+      if msg.user_id.nil? || msg.text.nil?
+        return
+      end
 
-      puts "receive message: #{msg.text}"
+      #puts "receive message: #{msg.text}"
 
       #TODO check type and call typed method
 
@@ -98,10 +101,15 @@ module SlackBotSlim
           if matched = ptn.match(msg.text)
             msg.matched = matched
             prc.call msg
+            return    # message consumed
             #TODO continue or break loop
           end
         end
       end
+
+      puts "[%s] receive message(but unmached): %s" %
+        [Time.now.strftime('%Y/%-m/%-d %H:%M:%S'), 'hoge']
+
     rescue => ex
       puts "Exception in handle message : #{ex.message}"
       puts ex.backtrace.join("\n\t")
