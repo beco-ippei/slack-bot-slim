@@ -21,6 +21,9 @@ Or install it yourself as:
     $ gem install slack-bot-slim
 
 
+Create your team's token from https://my.slack.com/services/new/bot
+
+
 # TODO
 * simple framework
   * pattern match handler
