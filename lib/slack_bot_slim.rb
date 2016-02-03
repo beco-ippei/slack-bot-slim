@@ -1,9 +1,9 @@
 require 'slack'
 
-require 'slack_bot_slim/bot'
-require 'slack_bot_slim/message'
-require 'slack_bot_slim/api'
-require 'slack_bot_slim/receiver'
+dir = File.expand_path('../slack_bot_slim', __FILE__)
+Dir[File.join dir, '**', '*.rb'].each do |file|
+  require file
+end
 
 SlackBot = SlackBotSlim::Bot
 
