@@ -38,6 +38,9 @@ module SlackBotSlim
       @receiver.stop
     end
 
+    # add bot responds pattern & procs
+    # if matched but won't continue,
+    # block should return 'false'
     def hear(type, pattern, priority = 0, &block)
       unless valid_type? type
         raise "invalid type '#{type}'"
@@ -82,8 +85,6 @@ module SlackBotSlim
         return
       end
 
-      #puts "receive message: #{msg.text}"
-
       #TODO check type and call typed method
 
       #TODO handle im ?
@@ -100,15 +101,16 @@ module SlackBotSlim
         @reactions[type].each do |(_, ptn, prc)|
           if matched = ptn.match(msg.text)
             msg.matched = matched
-            prc.call msg
-            return    # message consumed
-            #TODO continue or break loop
+            consumed = prc.call msg
+            unless consumed === false
+              return  # not consumed
+            end
           end
         end
       end
 
       puts "[%s] receive message(but unmached): %s" %
-        [Time.now.strftime('%Y/%-m/%-d %H:%M:%S'), 'hoge']
+        [Time.now.strftime('%Y/%-m/%-d %H:%M:%S'), msg.text]
 
     rescue => ex
       puts "Exception in handle message : #{ex.message}"
