@@ -12,11 +12,6 @@ module SlackBotSlim
       @users = {}
       @channels = {}
 
-      #TODO
-      #def @api.rtm_start
-      #  post("rtm.start")
-      #end
-
       res = @api.send :post, "rtm.start"
       unless res['ok']
         raise 'rtm connection failed'
@@ -31,14 +26,6 @@ module SlackBotSlim
     end
 
     def receiver
-      #res = @api.rtm_start
-      #unless res['ok']
-      #  raise 'rtm connection failed'
-      #end
-
-      #merge_channels res['channels']
-      #merge_users res['users']
-
       bot = SlackBot.instance
       SlackBotSlim::Receiver.new @rtm_url, bot
     end
