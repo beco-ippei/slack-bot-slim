@@ -42,6 +42,7 @@ module SlackBotSlim
     # if matched but won't continue,
     # block should return 'false'
     def hear(type, pattern, priority = 0, &block)
+      #TODO split type of methods ?
       unless valid_type? type
         raise "invalid type '#{type}'"
       end
@@ -63,12 +64,16 @@ module SlackBotSlim
       api.chat_postMessage _params
     end
 
+    def log(*msg)
+      puts "[#{Time.now.strftime '%Y-%m-%d %H:%M:%S'}]: #{msg.join ' '}"
+    end
+
     private
 
     def auth
       res = Slack.auth_test
 
-      puts "auth test: #{res}"
+      log "auth test: #{res}"
 
       @url = res['url']
       @team = res['team']
@@ -109,12 +114,12 @@ module SlackBotSlim
         end
       end
 
-      puts "[%s] receive message(but unmached): %s" %
+      log "[%s] receive message(but unmached): %s" %
         [Time.now.strftime('%Y/%-m/%-d %H:%M:%S'), msg.text]
 
     rescue => ex
-      puts "Exception in handle message : #{ex.message}"
-      puts ex.backtrace.join("\n\t")
+      log "Exception in handle message : #{ex.message}"
+      log ex.backtrace.join("\n\t")
       send_message(
         channel: data['channel'],
         text: "error : '#{ex.message}'",

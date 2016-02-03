@@ -13,7 +13,7 @@ module SlackBotSlim
         ws = Faye::WebSocket::Client.new(@url)
 
         ws.on :open do |event|
-          puts 'Successfully connected.'
+          @bot.log 'Successfully connected.'
         end
 
         ws.on :message do |event|
@@ -26,13 +26,13 @@ module SlackBotSlim
           when :reconnect_url
             @reconnect_url = data['url']
           else
-            puts "--- :#{type} ---", data
+            @bot.log "--- :#{type} ---", data
           end
         end
 
         ws.on :close do |event|
-          puts 'connection closed'
-          p event
+          @bot.log "connection closed: [%s] '%s'" %
+              [event.code, event.reason]
           self.stop
         end
 
@@ -42,7 +42,7 @@ module SlackBotSlim
     end
 
     def stop
-      puts "stopped"
+      @bot.log "stopped"
       EM.stop
     end
   end
