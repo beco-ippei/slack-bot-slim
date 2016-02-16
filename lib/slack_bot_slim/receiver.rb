@@ -3,42 +3,90 @@ require 'eventmachine'
 
 module SlackBotSlim
   class Receiver
-    def initialize(url, bot)
+    IGNORE_EVENTS = [
+      :user_typing,
+      :presence_change,
+      :file_shared,
+      :file_public,
+      :reaction_added,
+    ]
+
+    def initialize(url, bot, auto_restart = false)
       @url = url
       @bot = bot
+      @restart = auto_restart
     end
 
     def start(&block)
-      EM.run do
-        ws = Faye::WebSocket::Client.new(@url)
+      while true
+        @restart = false   # reset
 
-        ws.on :open do |event|
-          @bot.log 'Successfully connected.'
+        EM.run do
+          ws = Faye::WebSocket::Client.new(@url)
+
+          ws.on :open do |event|
+            @bot.log 'Successfully connected.'
+          end
+
+          ws.on :message do |event|
+            data = JSON.parse(event.data)
+            case type = data["type"].to_sym
+            when :message
+              yield JSON.parse(event.data)
+            when :team_migration_started
+              @bot.log "#{type}: stop and restart"
+              self.restart
+            when *IGNORE_EVENTS
+              # do nothing
+              print '.'     #TODO: debuging
+            when :reconnect_url
+              @url = data['url']
+            else
+              @bot.log "--- :#{type} ---", data
+            end
+          end
+
+          ws.on :close do |event|
+            @bot.log "connection closed: [%s] '%s'" %
+                [event.code, event.reason]
+            self.stop
+          end
+
+          Signal.trap("INT")  { self.stop }
+          Signal.trap("TERM") { self.stop }
         end
 
-        ws.on :message do |event|
-          data = JSON.parse(event.data)
-          case type = data["type"].to_sym
-          when :message
-            yield JSON.parse(event.data)
-          when :user_typing, :presence_change
-            # do nothing
-          when :reconnect_url
-            @reconnect_url = data['url']
-          else
-            @bot.log "--- :#{type} ---", data
+        EM.run do
+          # check state
+          tick = EM.tick_loop do
+            msg = %x[cat msg 2>/dev/null].chomp
+            sleep 5
+            case msg
+            when 'stop'
+              :stop
+            when 'restart'
+              self.restart
+            when nil, ''
+              print '-'     #TODO debug
+            else
+              print 'o'
+            end
+          end
+
+          tick.on_stop do
+            @restart = false
+            self.stop
           end
         end
 
-        ws.on :close do |event|
-          @bot.log "connection closed: [%s] '%s'" %
-              [event.code, event.reason]
-          self.stop
-        end
-
-        Signal.trap("INT")  { self.stop }
-        Signal.trap("TERM") { self.stop }
+        break if @restart == false
       end
+    end
+
+    def restart
+      @bot.log 'restart connection'
+      @restart = true
+      self.stop
     end
 
     def stop
