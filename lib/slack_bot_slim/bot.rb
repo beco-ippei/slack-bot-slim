@@ -64,6 +64,11 @@ module SlackBotSlim
       api.chat_postMessage _params
     end
 
+    def alive?
+      res = api.getPresence user: user
+      res && res[:presense] == 'active'
+    end
+
     def log(*msg)
       puts "[#{Time.now.strftime '%Y-%m-%d %H:%M:%S'}]: #{msg.join ' '}"
     end
@@ -114,6 +119,7 @@ module SlackBotSlim
         end
       end
 
+      #TODO: unless matched patterns (consumed option)
       log "[%s] receive message(but unmached): %s" %
         [Time.now.strftime('%Y/%-m/%-d %H:%M:%S'), msg.text]
 

@@ -60,16 +60,15 @@ module SlackBotSlim
           # check state
           tick = EM.tick_loop do
             msg = %x[cat msg 2>/dev/null].chomp
-            sleep 5
-            case msg
-            when 'stop'
+            sleep 20
+            print '*'   #TODO: debug
+
+            if @bot.alive?
+              # ok
+            elsif msg == 'stop'
               :stop
-            when 'restart'
-              self.restart
-            when nil, ''
-              print '-'     #TODO debug
             else
-              print 'o'
+              :restart
             end
           end
 
