@@ -11,16 +11,14 @@ module SlackBotSlim
       :reaction_added,
     ]
 
-    def initialize(url, bot, auto_restart = false)
+    def initialize(url, bot)
       @url = url
       @bot = bot
-      @restart = auto_restart
+      @restart = true
     end
 
-    def start(&block)
-      while true
-        @restart = false   # reset
-
+    def start
+      while @restart
         EM.run do
           ws = Faye::WebSocket::Client.new(@url)
 
@@ -29,21 +27,7 @@ module SlackBotSlim
           end
 
           ws.on :message do |event|
-            data = JSON.parse(event.data)
-            case type = data["type"].to_sym
-            when :message
-              yield JSON.parse(event.data)
-            when :team_migration_started
-              @bot.log "#{type}: stop and restart"
-              self.restart
-            when *IGNORE_EVENTS
-              # do nothing
-              print '.'     #TODO: debuging
-            when :reconnect_url
-              @url = data['url']
-            else
-              @bot.log "--- :#{type} ---", data
-            end
+            handle_event event
           end
 
           ws.on :close do |event|
@@ -54,43 +38,73 @@ module SlackBotSlim
 
           Signal.trap("INT")  { self.stop }
           Signal.trap("TERM") { self.stop }
-        end
 
-        EM.run do
-          # check state
-          tick = EM.tick_loop do
-            msg = %x[cat msg 2>/dev/null].chomp
-            sleep 20
-            print '*'   #TODO: debug
-
-            if @bot.alive?
-              # ok
-            elsif msg == 'stop'
-              :stop
-            else
-              :restart
+          @checker = Thread.start do
+            # check state
+            while true
+              sleep 60    #TODO be env
+              if cmd = check_connection
+                self.stop cmd
+              end
             end
           end
-
-          tick.on_stop do
-            @restart = false
-            self.stop
-          end
         end
 
-        break if @restart == false
+        self.stop_checker
       end
     end
 
-    def restart
-      @bot.log 'restart connection'
-      @restart = true
-      self.stop
+    def stop(mode = nil)
+      @restart = (mode == :restart)
+
+      self.stop_checker
+      EM.stop
+
+      if @restart
+        @bot.log 'restart connection'
+      else
+        @bot.log "stopped"
+      end
     end
 
-    def stop
-      @bot.log "stopped"
-      EM.stop
+    private
+
+    def stop_checker
+      if @checker && @checker.alive?
+        @checker.kill
+      end
+    end
+
+    def handle_event(event)
+      data = JSON.parse(event.data)
+
+      case type = data["type"].to_sym
+      when :message
+        @bot.handle_message data
+      when :team_migration_started
+        @bot.log "#{type}: stop and restart"
+        self.stop :restart
+      when *IGNORE_EVENTS
+        # do nothing
+        print '.'     #TODO: debuging
+      when :reconnect_url
+        @url = data['url']
+      else
+        @bot.log "--- :#{type} ---", data
+      end
+    end
+
+    def check_connection
+      msg = %x[cat msg 2>/dev/null].chomp
+      print '*'   #TODO: debug
+
+      if @bot.alive?
+        # ok
+      elsif msg == 'stop'
+        :stop
+      else
+        :restart
+      end
     end
   end
 end

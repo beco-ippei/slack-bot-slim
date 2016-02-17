@@ -29,9 +29,7 @@ module SlackBotSlim
     #TODO: sort by priority
     def start
       @receiver = @api.receiver
-      @receiver.start do |data|
-        handle_message data
-      end
+      @receiver.start
     end
 
     def stop
@@ -65,28 +63,13 @@ module SlackBotSlim
     end
 
     def alive?
-      res = api.getPresence user: user
-      res && res[:presense] == 'active'
+      res = api.users_getPresence user: user_id
+      res && res['presence'] == 'active'
     end
 
     def log(*msg)
-      puts "[#{Time.now.strftime '%Y-%m-%d %H:%M:%S'}]: #{msg.join ' '}"
-    end
-
-    private
-
-    def auth
-      res = Slack.auth_test
-
-      log "auth test: #{res}"
-
-      @url = res['url']
-      @team = res['team']
-      @team_id = res['team_id']
-      @user = res['user']
-      @user_id = res['user_id']
-
-      [res['ok'], res['error']]
+      time = Time.now.strftime '%Y-%m-%d %H:%M:%S'
+      puts "[#{time}]: #{msg.join ' '}"
     end
 
     def handle_message(data)
@@ -120,8 +103,7 @@ module SlackBotSlim
       end
 
       #TODO: unless matched patterns (consumed option)
-      log "[%s] receive message(but unmached): %s" %
-        [Time.now.strftime('%Y/%-m/%-d %H:%M:%S'), msg.text]
+      log "unmached message: %s" % msg.text
 
     rescue => ex
       log "Exception in handle message : #{ex.message}"
@@ -130,6 +112,22 @@ module SlackBotSlim
         channel: data['channel'],
         text: "error : '#{ex.message}'",
       )
+    end
+
+    private
+
+    def auth
+      res = Slack.auth_test
+
+      log "auth test: #{res}"
+
+      @url = res['url']
+      @team = res['team']
+      @team_id = res['team_id']
+      @user = res['user']
+      @user_id = res['user_id']
+
+      [res['ok'], res['error']]
     end
 
     def valid_type?(type)
