@@ -50,14 +50,14 @@ module SlackBotSlim
           end
         end
 
-        self.stop_checker
+        stop_checker
       end
     end
 
     def stop(mode = nil)
       @restart = (mode == :restart)
 
-      self.stop_checker
+      stop_checker
       EM.stop
 
       if @restart
