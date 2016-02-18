@@ -1,5 +1,4 @@
-require 'minitest/autorun'
-require './lib/slack_bot_slim/message'
+require 'test_helper'
 
 describe SlackBotSlim::Message do
   before do
