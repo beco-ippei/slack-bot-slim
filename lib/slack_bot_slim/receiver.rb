@@ -3,14 +3,6 @@ require 'eventmachine'
 
 module SlackBotSlim
   class Receiver
-    IGNORE_EVENTS = [
-      :user_typing,
-      :presence_change,
-      :file_shared,
-      :file_public,
-      :reaction_added,
-    ]
-
     def initialize(url, bot)
       @url = url
       @bot = bot
@@ -84,13 +76,14 @@ module SlackBotSlim
       when :team_migration_started
         @bot.log "#{type}: stop and restart"
         self.stop :restart
-      when *IGNORE_EVENTS
-        # do nothing
-        print '.'     #TODO: debuging
       when :reconnect_url
         @url = data['url']
       else
-        @bot.log "--- :#{type} ---", data
+        # do nothing
+        # if you want add reactions,
+        # refar to https://api.slack.com/rtm
+        # ex. user or team add/change.
+        print '.'     #TODO: debuging
       end
     end
 
