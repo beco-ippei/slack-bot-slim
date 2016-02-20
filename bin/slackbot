@@ -6,7 +6,7 @@ end
 
 require 'slack-bot-slim'
 
-SlackBot.token = ENV['token']
+SlackBot.token = ENV['SLACK_BOT_TOKEN']
 bot = SlackBot.instance
 
 require 'application'
