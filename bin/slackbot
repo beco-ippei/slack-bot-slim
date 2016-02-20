@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+%w[lib app].each do |dir|
+  $LOAD_PATH.unshift File.expand_path("../../#{dir}", __FILE__)
+end
+
+require 'slack-bot-slim'
+
+SlackBot.token = ENV['token']
+bot = SlackBot.instance
+
+require 'application'
+
+# start
+bot.start
+
