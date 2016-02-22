@@ -7,6 +7,7 @@ module SlackBotSlim
 
     def initialize(data)
       @type = data['type']
+      @data = data
 
       #TODO: 各項目がnilになるケースなど
       self.text = data['text']
@@ -28,11 +29,25 @@ module SlackBotSlim
     end
 
     def dm?
-      @dm && @dm == bot.user_id
+      if bot?
+        @dm == bot.user
+      else
+        @dm && @dm == bot.user_id
+      end
     end
 
     def mentioned?
-      @mentions && @mentions.include?(bot.user_id)
+      if @mentions.nil?
+        false
+      elsif bot?
+        @mentions.include? bot.user
+      else
+        @mentions.include? bot.user_id
+      end
+    end
+
+    def bot?
+      @data['subtype'] == "bot_message"
     end
 
     private

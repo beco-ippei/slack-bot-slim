@@ -74,7 +74,11 @@ module SlackBotSlim
 
     def handle_message(data)
       msg = SlackBotSlim::Message.new data
-      if msg.user_id.nil? || msg.text.nil?
+      #if msg.user_id.nil? || msg.text.nil?
+      #TODO it's bot if user_id.nil?
+      if msg.text.nil?
+        return
+      elsif msg.bot? && !msg.dm? && !msg.mentioned?
         return
       end
 
@@ -89,21 +93,25 @@ module SlackBotSlim
                 [:ambient, :all]
               end
 
+      pattern_matched = false
       types.each do |type|
         next unless @reactions[type]
         @reactions[type].each do |(_, ptn, prc)|
           if matched = ptn.match(msg.text)
             msg.matched = matched
+            pattern_matched = true
             consumed = prc.call msg
-            unless consumed === false
-              return  # not consumed
+            if consumed != false
+              return    # consumed
             end
           end
         end
       end
 
       #TODO: unless matched patterns (consumed option)
-      log "unmached message: %s" % msg.text
+      unless pattern_matched
+        log "unmached message: %s" % msg.text
+      end
 
     rescue => ex
       log "Exception in handle message : #{ex.message}"
