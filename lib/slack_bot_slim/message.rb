@@ -9,8 +9,8 @@ module SlackBotSlim
       @type = data['type']
       @data = data
 
+      fetch_text data
       #TODO: 各項目がnilになるケースなど
-      self.text = data['text']
       self.channel = data['channel']
       self.user = data['user']
       self.time = data['ts'].to_f
@@ -29,10 +29,12 @@ module SlackBotSlim
     end
 
     def dm?
-      if bot?
-        @dm == bot.user
+      if !@dm
+        false
+      elsif bot?
+        @dm.include? bot.user
       else
-        @dm && @dm == bot.user_id
+        @dm.include? bot.user_id
       end
     end
 
@@ -57,6 +59,23 @@ module SlackBotSlim
       @@bot
     end
 
+    def fetch_text(data)
+      if data['text']
+        self.text = data['text']
+      else
+        # from 'attachments'
+        attachments = data['attachments']
+        if attachments
+          atch = attachments.first
+          self.text = if atch['text']
+                       atch['text']
+                     elsif atch['pretext']
+                       atch['pretext']
+                     end
+        end
+      end
+    end
+
     def text=(text)
       @original_text = text
 
@@ -70,11 +89,13 @@ module SlackBotSlim
 
     def parse_text(text)
       text.strip!
-      if m = /^[\s　]*<@([^>]+)>[:\s](.*)$/.match(text)
-        dm = m[1]
+      dm_ptn = /^[\s　]*<@([^>]+)>[:\s](.*)$/
+      if m = dm_ptn.match(text)
+        dm = m[1].split('|')
         text = m[2].strip
       end
 
+      #TODO IFTTT?
       mentions = text.scan(/<@([^>]+)>/).map(&:first)
 
       {
