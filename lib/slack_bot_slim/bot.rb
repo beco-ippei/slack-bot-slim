@@ -74,12 +74,13 @@ module SlackBotSlim
 
     def handle_message(data)
       msg = SlackBotSlim::Message.new data
-      #if msg.user_id.nil? || msg.text.nil?
-      #TODO it's bot if user_id.nil?
+
       if msg.text.nil?
         return
+      elsif msg.mine?
+        return      # bot's message
       elsif msg.bot? && !msg.dm? && !msg.mentioned?
-        return
+        #return      #TODO: ignore if not mentioned
       end
 
       #TODO check type and call typed method

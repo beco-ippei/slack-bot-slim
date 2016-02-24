@@ -5,6 +5,8 @@ module SlackBotSlim
       :user, :user_id, :channel, :channel_id,
       :ts, :time, :team, :team_id
 
+    BOT_MESSAGE = 'bot_message'
+
     def initialize(data)
       @type = data['type']
       @data = data
@@ -49,7 +51,11 @@ module SlackBotSlim
     end
 
     def bot?
-      @data['subtype'] == "bot_message"
+      @data['subtype'] == BOT_MESSAGE
+    end
+
+    def mine?
+      bot? && @data['username'] == bot.user
     end
 
     private
