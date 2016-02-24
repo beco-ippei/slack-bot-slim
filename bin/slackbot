@@ -9,7 +9,8 @@ require 'slack-bot-slim'
 SlackBot.token = ENV['SLACK_BOT_TOKEN']
 bot = SlackBot.instance
 
-require 'application'
+#TODO ...
+require './app/application'
 
 # start
 bot.start
