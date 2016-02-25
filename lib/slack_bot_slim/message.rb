@@ -5,11 +5,14 @@ module SlackBotSlim
       :user, :user_id, :channel, :channel_id,
       :ts, :time, :team, :team_id
 
+    BOT_MESSAGE = 'bot_message'
+
     def initialize(data)
       @type = data['type']
+      @data = data
 
+      fetch_text data
       #TODO: 各項目がnilになるケースなど
-      self.text = data['text']
       self.channel = data['channel']
       self.user = data['user']
       self.time = data['ts'].to_f
@@ -28,11 +31,31 @@ module SlackBotSlim
     end
 
     def dm?
-      @dm && @dm == bot.user_id
+      if !@dm
+        false
+      elsif bot?
+        @dm.include? bot.user
+      else
+        @dm.include? bot.user_id
+      end
     end
 
     def mentioned?
-      @mentions && @mentions.include?(bot.user_id)
+      if @mentions.nil?
+        false
+      elsif bot?
+        @mentions.include? bot.user
+      else
+        @mentions.include? bot.user_id
+      end
+    end
+
+    def bot?
+      @data['subtype'] == BOT_MESSAGE
+    end
+
+    def mine?
+      bot? && @data['username'] == bot.user
     end
 
     private
@@ -40,6 +63,23 @@ module SlackBotSlim
     def bot
       @@bot ||= SlackBotSlim::Bot.instance
       @@bot
+    end
+
+    def fetch_text(data)
+      if data['text']
+        self.text = data['text']
+      else
+        # from 'attachments'
+        attachments = data['attachments']
+        if attachments
+          atch = attachments.first
+          self.text = if atch['text']
+                       atch['text']
+                     elsif atch['pretext']
+                       atch['pretext']
+                     end
+        end
+      end
     end
 
     def text=(text)
@@ -55,11 +95,13 @@ module SlackBotSlim
 
     def parse_text(text)
       text.strip!
-      if m = /^[\s　]*<@([^>]+)>[:\s](.*)$/.match(text)
-        dm = m[1]
+      dm_ptn = /^[\s　]*<@([^>]+)>[:\s](.*)$/
+      if m = dm_ptn.match(text)
+        dm = m[1].split('|')
         text = m[2].strip
       end
 
+      #TODO IFTTT?
       mentions = text.scan(/<@([^>]+)>/).map(&:first)
 
       {
