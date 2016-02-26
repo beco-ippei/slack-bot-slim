@@ -30,26 +30,13 @@ module SlackBotSlim
 
           Signal.trap("INT")  { self.stop }
           Signal.trap("TERM") { self.stop }
-
-          @checker = Thread.start do
-            # check state
-            while true
-              sleep 60    #TODO be env
-              if cmd = check_connection
-                self.stop cmd
-              end
-            end
-          end
         end
-
-        stop_checker
       end
     end
 
     def stop(mode = nil)
       @restart = (mode == :restart)
 
-      stop_checker
       EM.stop
 
       if @restart
@@ -60,12 +47,6 @@ module SlackBotSlim
     end
 
     private
-
-    def stop_checker
-      if @checker && @checker.alive?
-        @checker.kill
-      end
-    end
 
     def handle_event(event)
       data = JSON.parse(event.data)
@@ -83,20 +64,7 @@ module SlackBotSlim
         # if you want add reactions,
         # refar to https://api.slack.com/rtm
         # ex. user or team add/change.
-        print '.'     #TODO: debuging
-      end
-    end
-
-    def check_connection
-      msg = %x[cat msg 2>/dev/null].chomp
-      print '*'   #TODO: debug
-
-      if @bot.alive?
-        # ok
-      elsif msg == 'stop'
-        :stop
-      else
-        :restart
+        print '.'
       end
     end
   end
