@@ -69,6 +69,7 @@ module SlackBotSlim
 
     def log(*msg)
       time = Time.now.strftime '%Y-%m-%d %H:%M:%S'
+      #TODO: file-logger and other
       puts "[#{time}]: #{msg.join ' '}"
     end
 

@@ -122,8 +122,8 @@ module SlackBotSlim
     def user=(user_id)
       if user_id
         @user_id = user_id
-        user = bot.api.user(user_id)
-        @user = user['name'] if user
+        _user = bot.api.user(user_id)
+        @user = _user['name'] if _user
       end
     end
 
