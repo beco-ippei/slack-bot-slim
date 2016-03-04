@@ -26,8 +26,14 @@ module SlackBotSlim
       @reactions = {}
     end
 
-    #TODO: sort by priority
     def start
+      # sort by priority
+      @reactions.each_key do |key|
+        @reactions[key].sort! do |a,b|
+          b[:priority] <=> a[:priority]
+        end
+      end
+
       @receiver = @api.receiver
       @receiver.start
     end
@@ -39,18 +45,18 @@ module SlackBotSlim
     # add bot responds pattern & procs
     # if matched but won't continue,
     # block should return 'false'
-    def hear(type, pattern, priority = 0, &block)
+    def hear(type, pattern, priority = 10, &block)
       #TODO split type of methods ?
       unless valid_type? type
         raise "invalid type '#{type}'"
       end
 
       @reactions[type] ||= []
-      @reactions[type] << [
-        priority,
-        pattern,
-        block,
-      ]
+      @reactions[type] << {
+        priority: priority,
+        pattern: pattern,
+        proc: block,
+      }
       nil
     end
 
@@ -98,11 +104,11 @@ module SlackBotSlim
       pattern_matched = false
       types.each do |type|
         next unless @reactions[type]
-        @reactions[type].each do |(_, ptn, prc)|
-          if matched = ptn.match(msg.text)
+        @reactions[type].each do |act|
+          if matched = act[:pattern].match(msg.text)
             msg.matched = matched
             pattern_matched = true
-            consumed = prc.call msg
+            consumed = act[:proc].call msg
             if consumed != false
               return    # consumed
             end
